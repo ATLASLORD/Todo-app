@@ -95,11 +95,11 @@
     .l1 { background: var(--c-green); } .l2 { background: var(--c-yellow); } .l3 { background: var(--c-red); }
     
     .btn-add { 
-        height: 54px; padding: 0 24px; 
-        background: var(--c-blue); color: white; 
-        text-shadow: 2px 2px 0 #2d3436; border-color: #2d3436; 
-        flex: 1; font-size: 18px; 
-        transition: none; 
+      height: 54px; padding: 0 24px; 
+      background: var(--c-blue); color: white; 
+      text-shadow: 2px 2px 0 #2d3436; border-color: #2d3436; 
+      flex: 1; font-size: 18px; 
+      transition: none; 
     }
     .btn-add:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--shadow-col); }
 
@@ -114,13 +114,13 @@
       background: var(--card); 
       border: var(--outline-width) solid var(--outline); 
       border-radius: 16px; 
-      padding: 8px 12px; /* MODIFIÉ : Moins de padding en haut/bas */
+      padding: 8px 12px;
       gap: 12px; 
       box-shadow: 5px 5px 0 rgba(0,0,0,0.2); 
       position: relative; 
       transition: max-height 0.5s ease, margin-bottom 0.5s ease, padding 0.5s ease, border-width 0.4s ease, opacity 0.1s ease; 
       max-height: 120px; 
-      margin-bottom: 10px; /* MODIFIÉ : Moins d'espace entre les tâches */
+      margin-bottom: 10px;
       opacity: 1; 
       transform-origin: center; overflow: visible; z-index: 1; 
       touch-action: manipulation; 
@@ -262,37 +262,23 @@
   let currentUser = null;
   let unsubscribeDB = null;
 
-  // --- AUDIO ZERO LATENCE (WEB AUDIO API) ---
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const buffers = {};
+  // --- AUDIO CONFIG ---
+  const katanaSound = new Audio('SFX_Feedback_Hit_Weakness_06.wav');
+  katanaSound.volume = 0.5;
+  const whipSound = new Audio('tinyWhip.wav');
+  whipSound.volume = 0.5;
 
-  async function loadSound(name, url) {
-    try {
-      const response = await fetch(url);
-      const arrayBuffer = await response.arrayBuffer();
-      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-      buffers[name] = audioBuffer;
-    } catch (e) { console.log("Erreur chargement son:", name); }
+  function playKatanaSound() {
+      katanaSound.currentTime = 0;
+      katanaSound.play().catch(() => {});
   }
 
-  // On charge les sons en mémoire dès le début
-  loadSound('katana', 'SFX_Feedback_Hit_Weakness_06.wav');
-  loadSound('whip', 'tinyWhip.wav');
-
-  function playSoundBuffer(name) {
-    if (!buffers[name]) return;
-    // Réveille le moteur audio s'il s'est endormi
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    
-    const source = audioCtx.createBufferSource();
-    source.buffer = buffers[name];
-    source.connect(audioCtx.destination);
-    // Permet de rejouer le son immédiatement même s'il n'est pas fini (pour les clics rapides)
-    source.start(0);
+  function playWhipSound() {
+      whipSound.currentTime = 0;
+      whipSound.play().catch(() => {});
   }
 
-  function playKatanaSound() { playSoundBuffer('katana'); }
-  function playWhipSound() { playSoundBuffer('whip'); }
+  // --- AUTHENTIFICATION ---
   window.login = function() { signInWithPopup(auth, provider).catch(err => alert("Erreur: " + err.message)); }
   window.logout = function() { signOut(auth).then(() => window.location.reload()); }
 
@@ -326,6 +312,7 @@
   }
 
   window.toggleTheme = function() {
+    playWhipSound();
     const el = document.documentElement;
     const next = el.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     el.setAttribute('data-theme', next);
@@ -361,13 +348,15 @@
   }
 
   window.setLvl = function(n) {
+    playWhipSound();
     currentLvl = n;
     document.querySelectorAll('.lvl-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.lvl-btn')[n-1].classList.add('active');
   }
 
-  // Fonction Add avec gestion formulaire
+  // Fonction Add avec gestion formulaire + son
   window.add = function() {
+    playWhipSound();
     const inp = document.getElementById('inp'); const txt = inp.value.trim();
     if (!txt) return;
     const newTask = { id: Date.now(), txt: txt, lvl: currentLvl, created: Date.now(), done: null };
@@ -443,7 +432,6 @@
     setTimeout(() => { row.classList.add('collapsed'); }, 300);
     setTimeout(() => {
       cloneTop.remove(); cloneBot.remove();
-      if (!Array.isArray(tasks)) tasks = [];
       const tIndex = tasks.findIndex(x => x.id === id);
       if (tIndex > -1) { tasks[tIndex].done = Date.now(); saveToCloud(); }
     }, 850);
