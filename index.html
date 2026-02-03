@@ -59,13 +59,8 @@
       transition: background-color 0.3s ease;
     }
 
-    /* CANVAS FOND (ETOILES) */
     #starfield { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -10; pointer-events: none; }
-
-    /* CANVAS FX (PARTICULES - Z-INDEX TRES HAUT) */
     #fx-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10000; }
-
-    /* LAYER CLONES (COUPURE) */
     #clone-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; overflow: hidden; }
 
     #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); z-index: 20000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease; }
@@ -103,13 +98,7 @@
     .lvl-btn.active { border-color: var(--text); transform: scale(1.15); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
     .l1 { background: var(--c-green); } .l2 { background: var(--c-yellow); } .l3 { background: var(--c-red); }
     
-    .btn-add { 
-        height: 54px; padding: 0 24px; 
-        background: var(--c-blue); color: white; 
-        text-shadow: 2px 2px 0 #2d3436; border-color: #2d3436; 
-        flex: 1; font-size: 18px; 
-        transition: none; 
-    }
+    .btn-add { height: 54px; padding: 0 24px; background: var(--c-blue); color: white; text-shadow: 2px 2px 0 #2d3436; border-color: #2d3436; flex: 1; font-size: 18px; transition: none; }
     .btn-add:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--shadow-col); }
 
     @media (max-width: 500px) { body { padding: 10px; } .app { gap: 20px; } .input-row { flex-direction: column; } .task-input { width: 100%; } .actions-row { display: flex; } .task-item:hover { transform: none; } }
@@ -117,11 +106,12 @@
     .page { display: none; } .page.active { display: block; }
     .list-container { display: flex; flex-direction: column; min-height: 100px; padding-top: 10px; }
 
-    /* TASK ITEM */
+    /* --- TASK ITEM COMPACT & RESPONSIVE --- */
     .task-item { 
       display: flex; align-items: center; 
       background: var(--card); border: var(--outline-width) solid var(--outline); border-radius: 16px; 
-      padding: 8px 12px; gap: 12px; 
+      padding: 8px 8px 8px 12px; /* Moins de padding à droite */
+      gap: 10px; 
       box-shadow: 5px 5px 0 rgba(0,0,0,0.2); 
       position: relative; 
       transition: max-height 0.5s ease, margin-bottom 0.5s ease, padding 0.5s ease, border-width 0.4s ease, opacity 0.1s ease; 
@@ -130,58 +120,54 @@
       touch-action: pan-y;
     }
     
-    .sortable-chosen {
-        background: var(--input-focus) !important;
-        transform: scale(1.02);
-        box-shadow: 8px 8px 0 rgba(0,0,0,0.3) !important;
-        z-index: 100 !important;
-    }
+    .sortable-chosen { background: var(--input-focus) !important; transform: scale(1.02); box-shadow: 8px 8px 0 rgba(0,0,0,0.3) !important; z-index: 100 !important; }
     .sortable-drag { opacity: 0; }
-
     .task-item.new-entry { animation: cardPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
     @keyframes cardPopIn { 0% { opacity: 0; transform: scale(0.5) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
     .task-item.cut-hidden { opacity: 0 !important; pointer-events: none; }
     .task-item.collapsed { max-height: 0 !important; margin-bottom: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; border-width: 0 !important; overflow: hidden; }
 
-    .check-box { width: 48px; height: 48px; border: 3px solid var(--outline); border-radius: 14px; cursor: pointer; display: grid; place-items: center; background: var(--card); transition: transform 0.1s; flex-shrink: 0; position: relative; z-index: 5; flex-shrink: 0; }
+    /* CHECKBOX PLUS PETITE POUR GAGNER DE LA PLACE */
+    .check-box { width: 40px; height: 40px; border: 3px solid var(--outline); border-radius: 12px; cursor: pointer; display: grid; place-items: center; background: var(--card); transition: transform 0.1s; flex-shrink: 0; position: relative; z-index: 5; }
     .check-box:active { transform: scale(0.9); }
-    .check-box svg { width: 30px; opacity: 0; transition: 0.2s; stroke: var(--text); stroke-width: 4px; stroke-linecap: round; stroke-linejoin: round;}
+    .check-box svg { width: 24px; opacity: 0; transition: 0.2s; stroke: var(--text); stroke-width: 4px; stroke-linecap: round; stroke-linejoin: round;}
     .check-box.checked { background: var(--c-green); pointer-events: none; border-color: var(--outline); }
     .check-box.checked svg { opacity: 1; transform: scale(1.2); stroke: white; }
 
-    .task-txt { flex: 1; font-weight: 800; font-size: 16px; z-index: 5; word-break: break-word; min-width: 0; /* Important pour que le texte wrap */ }
-    
-    /* BADGE COMPACT */
-    .task-tag { 
-      font-size: 11px; font-weight: 900; text-transform: uppercase; 
-      padding: 4px 8px; border-radius: 6px; 
-      border: 2px solid var(--outline); white-space: nowrap; 
-      z-index: 5; color: #2d3436; 
-      flex-shrink: 0; /* Ne s'écrase pas */
+    /* TEXTE QUI PREND TOUTE LA PLACE */
+    .task-txt { 
+        flex: 1; font-weight: 800; font-size: 16px; z-index: 5; 
+        word-break: break-word; min-width: 0; /* Permet le wrap */
+        margin-right: 2px;
     }
 
+    /* COLONNE DROITE ULTRA COMPACTE */
+    .right-col {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 6px; flex-shrink: 0; width: 24px;
+    }
+
+    /* BADGE MINIATURE (PASTILLE) */
+    .task-tag { 
+        font-size: 9px; font-weight: 900; padding: 2px 4px; 
+        border-radius: 4px; border: 1px solid var(--outline); 
+        white-space: nowrap; color: #2d3436; 
+        line-height: 1;
+    }
+
+    /* CROIX ROUGE COMPACTE */
     .btn-delete {
-      color: var(--c-red); font-size: 28px; font-weight: 900;
-      padding: 0 10px; cursor: pointer; line-height: 1;
-      transition: transform 0.2s; z-index: 10;
+      color: var(--c-red); font-size: 22px; font-weight: 900;
+      cursor: pointer; line-height: 1;
+      transition: transform 0.2s;
       -webkit-tap-highlight-color: transparent;
-      flex-shrink: 0; /* CRUCIAL : Ne s'écrase pas */
+      display: flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px;
     }
     .btn-delete:active { transform: scale(1.2); }
 
-    .clone-half { 
-      position: absolute; z-index: 9999; 
-      background: var(--card); border: var(--outline-width) solid var(--outline); 
-      border-radius: 16px; padding: 12px; 
-      display: flex; align-items: center; gap: 12px; 
-      filter: drop-shadow(5px 5px 0px rgba(0,0,0,0.2)); 
-      pointer-events: none; box-sizing: border-box; color: var(--text); overflow: visible !important; 
-    }
-    .slash-flash { 
-      position: absolute; height: 4px; background: white; 
-      box-shadow: 0 0 10px rgba(255,255,255,0.9), 0 0 20px cyan; 
-      z-index: 10000; transform-origin: left center; pointer-events: none; border-radius: 10px; 
-    }
+    .clone-half { position: absolute; z-index: 9999; background: var(--card); border: var(--outline-width) solid var(--outline); border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 12px; filter: drop-shadow(5px 5px 0px rgba(0,0,0,0.2)); pointer-events: none; box-sizing: border-box; color: var(--text); overflow: visible !important; }
+    .slash-flash { position: absolute; height: 4px; background: white; box-shadow: 0 0 10px rgba(255,255,255,0.9), 0 0 20px cyan; z-index: 10000; transform-origin: left center; pointer-events: none; border-radius: 10px; }
 
     .aura-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: -1; }
     .aura-base { opacity: 0; animation: fadeInBase 1s ease-out 0.3s forwards; }
@@ -207,27 +193,25 @@
 
     .history-list { display: flex; flex-direction: column; gap: 8px; }
     
-    /* HISTORY ITEM - PROTECTION CONTRE LE TEXTE QUI POUSSE */
+    /* HISTORY ITEM FIX */
     .h-item { 
       display: flex; justify-content: space-between; align-items: center; 
       padding: 10px 14px; border: 2px solid var(--outline); 
       border-radius: 12px; background: var(--card); 
       animation: fadeInHistory 0.4s ease-out forwards; 
       opacity: 0; transform: translateY(10px); 
-      gap: 10px;
+      gap: 10px; 
     }
     .h-item.hard { border-color: var(--c-red); background: rgba(255, 118, 117, 0.15); }
     [data-theme="dark"] .h-item.hard { background: rgba(255, 118, 117, 0.25); }
     @keyframes fadeInHistory { to { opacity: 1; transform: translateY(0); } }
     
-    .h-left { display: flex; flex-direction: column; flex: 1; min-width: 0; /* Permet au texte de se couper */ }
+    /* Colonnes Historique */
+    .h-left { display: flex; flex-direction: column; flex: 1; min-width: 0; /* Permet au texte de wrap */ }
     .h-date { font-size: 11px; color: var(--c-grey); font-weight: 700; margin-bottom: 2px; }
     .h-txt { font-weight: 800; font-size: 14px; color: var(--text); overflow-wrap: break-word; }
     
-    .h-right { 
-      display: flex; flex-direction: column; align-items: flex-end; gap: 2px; 
-      flex-shrink: 0; /* Ne s'écrase pas */
-    }
+    .h-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
     .h-dur { font-size: 10px; font-weight: 900; color: var(--c-grey); background: var(--bg-base); padding: 2px 6px; border-radius: 6px; white-space: nowrap; }
     .h-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 4px currentColor; }
 
@@ -237,9 +221,7 @@
 <body>
 
 <canvas id="starfield"></canvas>
-
 <canvas id="fx-canvas"></canvas>
-
 <div id="clone-layer"></div>
 
 <div id="login-overlay">
@@ -251,7 +233,6 @@
 </div>
 
 <div class="app" id="app">
-  
   <div class="card header">
     <div class="title-row">
       <h1>To-Do</h1>
@@ -268,7 +249,6 @@
 
   <div id="page-tasks" class="page active">
     <div class="card">
-      
       <form class="input-row" onsubmit="event.preventDefault(); add();">
         <input type="text" id="inp" class="task-input" placeholder="Nouvelle mission..." autocomplete="off" />
         <div class="actions-row">
@@ -280,7 +260,6 @@
           <button type="submit" class="btn btn-add">GO</button>
         </div>
       </form>
-
       <div id="list" class="list-container"></div>
     </div>
   </div>
@@ -410,7 +389,6 @@
     drawStars();
   }
 
-  // --- MOTEUR ETOILES ---
   const canvas = document.getElementById('starfield');
   const ctx = canvas.getContext('2d');
   let stars = [];
@@ -429,7 +407,6 @@
   window.drawStars = function() { ctx.clearRect(0, 0, width, height); stars.forEach(s => s.draw()); }
   window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateStars();
 
-  // --- MOTEUR PARTICULES CANVAS FX ---
   const fxCanvas = document.getElementById('fx-canvas');
   const fxCtx = fxCanvas.getContext('2d');
   let particles = [];
@@ -453,7 +430,7 @@
           this.life -= 0.03;
           this.vx *= 0.9;
           this.vy *= 0.9;
-          this.vy += 0.8; // Gravité
+          this.vy += 0.8; 
           this.x += this.vx;
           this.y += this.vy;
       }
@@ -598,8 +575,11 @@
     el.innerHTML = `${aura}
       <div class="check-box" onclick="check(${t.id}, this)"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12"></path></svg></div>
       <div class="task-txt">${escape(t.txt)}</div>
-      <div class="task-tag" style="background:${badgeColor}">${badgeTxt}</div>
-      <div class="btn-delete" onclick="del(${t.id})">&times;</div>`;
+      
+      <div class="right-col">
+        <div class="btn-delete" onclick="del(${t.id})">&times;</div>
+        <div class="task-tag" style="background:${badgeColor}">${badgeTxt}</div>
+      </div>`;
     return el;
   }
 
@@ -608,11 +588,9 @@
     playKatanaSound(); btn.classList.add('checked');
     const rect = row.getBoundingClientRect();
     
-    // Reset shake
     const appEl = document.getElementById('app');
     appEl.classList.remove('shake'); void appEl.offsetWidth; appEl.classList.add('shake');
     
-    // CLONES DANS LE CLONE LAYER
     const layer = document.getElementById('clone-layer');
     const cloneTop = row.cloneNode(true); const cloneBot = row.cloneNode(true);
     
@@ -632,7 +610,6 @@
     row.classList.add('cut-hidden');
     spawnSlashLine(rect, -3); 
     
-    // PARTICULES SUR CANVAS FX (Zéro Glitch)
     spawnCanvasParticles(rect.left + rect.width/2, rect.top + rect.height/2, true);
     
     requestAnimationFrame(() => {
