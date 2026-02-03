@@ -86,7 +86,6 @@
     .tab { flex: 1; padding: 14px; font-size: 15px; }
     .tab.active { background: var(--c-yellow); color: #2d3436; transform: translate(2px,2px); box-shadow: 0 0 0 var(--shadow-col); border-color: #2d3436; }
 
-    /* FORMULAIRE INPUT */
     .input-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
     .task-input { flex: 1; min-width: 200px; height: 54px; background: var(--input-bg); color: var(--text); border: var(--outline-width) solid var(--outline); border-radius: 14px; padding: 0 16px; font-family: inherit; font-weight: 700; font-size: 16px; outline: none; box-shadow: inset 3px 3px 0 rgba(0,0,0,0.1); }
     .actions-row { display: flex; gap: 10px; width: 100%; }
@@ -95,13 +94,12 @@
     .lvl-btn.active { border-color: var(--text); transform: scale(1.15); box-shadow: 0 2px 0 rgba(0,0,0,0.3); }
     .l1 { background: var(--c-green); } .l2 { background: var(--c-yellow); } .l3 { background: var(--c-red); }
     
-    /* BOUTON GO (CSS ONLY pour éviter le lag) */
     .btn-add { 
         height: 54px; padding: 0 24px; 
         background: var(--c-blue); color: white; 
         text-shadow: 2px 2px 0 #2d3436; border-color: #2d3436; 
         flex: 1; font-size: 18px; 
-        transition: none; /* Pas de transition = instantané (snappy) */
+        transition: none; 
     }
     .btn-add:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--shadow-col); }
 
@@ -110,7 +108,24 @@
     .page { display: none; } .page.active { display: block; }
     .list-container { display: flex; flex-direction: column; min-height: 100px; padding-top: 10px; }
 
-    .task-item { display: flex; align-items: center; background: var(--card); border: var(--outline-width) solid var(--outline); border-radius: 16px; padding: 12px; gap: 12px; box-shadow: 5px 5px 0 rgba(0,0,0,0.2); position: relative; transition: max-height 0.5s ease, margin-bottom 0.5s ease, padding 0.5s ease, border-width 0.4s ease, opacity 0.1s ease; max-height: 120px; margin-bottom: 20px; opacity: 1; transform-origin: center; overflow: visible; z-index: 1; touch-action: manipulation; }
+    /* --- TASK ITEM COMPACT --- */
+    .task-item { 
+      display: flex; align-items: center; 
+      background: var(--card); 
+      border: var(--outline-width) solid var(--outline); 
+      border-radius: 16px; 
+      padding: 8px 12px; /* MODIFIÉ : Moins de padding en haut/bas */
+      gap: 12px; 
+      box-shadow: 5px 5px 0 rgba(0,0,0,0.2); 
+      position: relative; 
+      transition: max-height 0.5s ease, margin-bottom 0.5s ease, padding 0.5s ease, border-width 0.4s ease, opacity 0.1s ease; 
+      max-height: 120px; 
+      margin-bottom: 10px; /* MODIFIÉ : Moins d'espace entre les tâches */
+      opacity: 1; 
+      transform-origin: center; overflow: visible; z-index: 1; 
+      touch-action: manipulation; 
+    }
+
     .task-item.new-entry { animation: cardPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
     @keyframes cardPopIn { 0% { opacity: 0; transform: scale(0.5) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
     .task-item.cut-hidden { opacity: 0 !important; pointer-events: none; }
@@ -328,7 +343,7 @@
     document.querySelectorAll('.lvl-btn')[n-1].classList.add('active');
   }
 
-  // Fonction Add modifiée pour le formulaire
+  // Fonction Add avec gestion formulaire
   window.add = function() {
     const inp = document.getElementById('inp'); const txt = inp.value.trim();
     if (!txt) return;
@@ -337,7 +352,7 @@
     tasks.push(newTask);
     saveToCloud();
     inp.value = ''; 
-    inp.blur(); // Ferme le clavier
+    inp.blur(); // Ferme le clavier sur mobile
   }
 
   function renderList(animateLast = false) {
