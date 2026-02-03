@@ -9,6 +9,8 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.png">
 
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
   <script>
     (function() {
       const localTheme = localStorage.getItem('kurz_theme');
@@ -117,8 +119,19 @@
       position: relative; 
       transition: max-height 0.5s ease, margin-bottom 0.5s ease, padding 0.5s ease, border-width 0.4s ease, opacity 0.1s ease; 
       max-height: 120px; margin-bottom: 10px; opacity: 1; 
-      transform-origin: center; overflow: visible; z-index: 1; touch-action: manipulation; 
+      transform-origin: center; overflow: visible; z-index: 1; 
+      touch-action: pan-y; /* Important pour le drag & drop */
     }
+    
+    /* Style quand on attrape une tâche */
+    .sortable-chosen {
+        background: var(--input-focus) !important;
+        transform: scale(1.02);
+        box-shadow: 8px 8px 0 rgba(0,0,0,0.3) !important;
+        z-index: 100 !important;
+    }
+    .sortable-drag { opacity: 0; } /* Cache l'original pendant le drag */
+
     .task-item.new-entry { animation: cardPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
     @keyframes cardPopIn { 0% { opacity: 0; transform: scale(0.5) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
     .task-item.cut-hidden { opacity: 0 !important; pointer-events: none; }
@@ -171,7 +184,7 @@
     .stat-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; border: 1px solid rgba(0,0,0,0.1); }
 
     .history-list { display: flex; flex-direction: column; gap: 8px; }
-    .h-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 2px solid var(--outline); border-radius: 12px; background: var(--card); animation: fadeInHistory 0.4s ease-out forwards; opacity: 0; transform: translateY(10px); }
+    .h-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border: 2px solid var(--outline); border-radius: 12px; background: var(--card); animation: fadeInHistory 0.4s ease-out forwards; opacity: 0; transform: translateY(10px); }
     .h-item.hard { border-color: var(--c-red); background: rgba(255, 118, 117, 0.15); }
     [data-theme="dark"] .h-item.hard { background: rgba(255, 118, 117, 0.25); }
     @keyframes fadeInHistory { to { opacity: 1; transform: translateY(0); } }
@@ -340,12 +353,14 @@
     set(userTasksRef, tasks);
   }
 
-  // --- FONCTION DE SUPPRESSION ---
+  // --- SUPPRESSION ---
   window.del = function(id) {
-    playWhipSound();
+    playWhipSound(); // Son de suppression
     if (!Array.isArray(tasks)) return;
-    tasks = tasks.filter(t => t.id !== id);
-    saveToCloud();
+    if(confirm("Supprimer définitivement ?")) {
+        tasks = tasks.filter(t => t.id !== id);
+        saveToCloud();
+    }
   }
 
   window.toggleTheme = function() {
@@ -391,13 +406,47 @@
     document.querySelectorAll('.lvl-btn')[n-1].classList.add('active');
   }
 
+  // --- INITIALISATION SORTABLE (DRAG & DROP) ---
+  function initSortable() {
+    new Sortable(document.getElementById('list'), {
+        animation: 150,
+        delay: 300, // Appui long 300ms pour activer sur mobile
+        delayOnTouchOnly: true, // Pas de délai sur PC
+        touchStartThreshold: 5, // Tolérance tremblement
+        chosenClass: "sortable-chosen",
+        dragClass: "sortable-drag",
+        onEnd: function (evt) {
+            // Logique de réorganisation ici si nécessaire
+            // Pour l'instant, on laisse visuel
+            // Pour persister l'ordre, il faudrait une logique plus complexe de mapping
+            // avec le tableau 'tasks', mais pour un usage simple, le visuel suffit
+            // tant que l'utilisateur ne recharge pas la page.
+            
+            // Pour persister vraiment l'ordre, on va tricher :
+            // On reconstruit le tableau tasks en fonction du DOM
+            const newOrderIds = Array.from(document.querySelectorAll('.task-item')).map(el => parseInt(el.id.replace('task-', '')));
+            
+            // On sépare les tâches actives (visibles) des tâches terminées (cachées)
+            const activeTasksMap = new Map(tasks.filter(t => !t.done).map(t => [t.id, t]));
+            const doneTasks = tasks.filter(t => t.done);
+            
+            // On recrée la liste des tâches actives dans le bon ordre
+            const reorderedActiveTasks = newOrderIds.map(id => activeTasksMap.get(id)).filter(t => t); // filter pour sécurité
+            
+            // On recombine tout (les nouvelles actives + les anciennes terminées)
+            tasks = [...reorderedActiveTasks, ...doneTasks];
+            saveToCloud();
+        }
+    });
+  }
+
   window.add = function() {
     playDwopSound();
     const inp = document.getElementById('inp'); const txt = inp.value.trim();
     if (!txt) return;
     const newTask = { id: Date.now(), txt: txt, lvl: currentLvl, created: Date.now(), done: null };
     if (!Array.isArray(tasks)) tasks = [];
-    tasks.push(newTask);
+    tasks.push(newTask); // Ajoute à la fin par défaut
     saveToCloud();
     inp.value = ''; 
     inp.blur(); 
@@ -405,11 +454,16 @@
 
   function renderList(animateLast = false) {
     const box = document.getElementById('list');
+    // NOTE : On ne trie PLUS par date (.sort) pour respecter l'ordre manuel
     const safeTasks = Array.isArray(tasks) ? tasks : [];
-    const activeTasks = safeTasks.filter(t => !t.done).sort((a,b) => b.created - a.created);
+    const activeTasks = safeTasks.filter(t => !t.done); 
+    
     box.innerHTML = '';
     if (activeTasks.length === 0) { box.innerHTML = `<div class="empty-msg">Aucune mission en cours.<br>Profites-en pour explorer ! 🚀</div>`; return; }
     activeTasks.forEach(t => box.appendChild(createTaskElement(t, false)));
+    
+    // Initialise le drag & drop APRES avoir rendu la liste
+    initSortable();
   }
 
   function getAuraHTML(level) {
@@ -433,6 +487,9 @@
 
   function createTaskElement(t, isNew) {
     const el = document.createElement('div'); el.className = isNew ? 'task-item new-entry' : 'task-item'; el.id = 'task-' + t.id;
+    // data-id pour sortableJS (si besoin)
+    el.setAttribute('data-id', t.id);
+    
     let badgeColor = t.lvl===1 ? 'var(--c-green)' : (t.lvl===2 ? 'var(--c-yellow)' : 'var(--c-red)');
     let badgeTxt = t.lvl===1 ? 'Easy' : (t.lvl===2 ? 'Medium' : 'Hard');
     const aura = getAuraHTML(t.lvl);
