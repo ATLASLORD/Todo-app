@@ -47,29 +47,15 @@
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    
-    /* GESTION SCROLL */
-    html { 
-      scrollbar-gutter: stable;
-      overflow-x: hidden; 
-    }
+    html { scrollbar-gutter: stable; overflow-x: hidden; }
 
     body {
-      margin: 0; 
-      min-height: 100vh; 
-      font-family: 'Nunito', sans-serif;
-      color: var(--text); 
-      background-color: var(--bg-base);
-      display: flex; 
-      justify-content: center; 
-      padding: 20px;
+      margin: 0; min-height: 100vh; font-family: 'Nunito', sans-serif;
+      color: var(--text); background-color: var(--bg-base);
+      display: flex; justify-content: center; padding: 20px;
       padding-top: max(20px, env(safe-area-inset-top));
       padding-bottom: max(20px, env(safe-area-inset-bottom));
-      
-      /* Scroll vertical autorisé, horizontal bloqué */
-      overflow-x: hidden; 
-      width: 100%;
-      position: relative;
+      overflow-x: hidden; width: 100%; position: relative;
       transition: background-color 0.3s ease;
     }
 
@@ -137,7 +123,6 @@
       touch-action: pan-y; /* Important pour SortableJS */
     }
     
-    /* Style Drag & Drop */
     .sortable-chosen {
         background: var(--input-focus) !important;
         transform: scale(1.02);
@@ -146,8 +131,10 @@
     }
     .sortable-drag { opacity: 0; }
 
+    /* ANIMATION APPARITION (Pop-In) */
     .task-item.new-entry { animation: cardPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
     @keyframes cardPopIn { 0% { opacity: 0; transform: scale(0.5) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+    
     .task-item.cut-hidden { opacity: 0 !important; pointer-events: none; }
     .task-item.collapsed { max-height: 0 !important; margin-bottom: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; border-width: 0 !important; overflow: hidden; }
 
@@ -369,7 +356,7 @@
 
   // --- SUPPRESSION ---
   window.del = function(id) {
-    playWhipSound(); // Son suppression
+    playWhipSound(); 
     if (!Array.isArray(tasks)) return;
     if(confirm("Supprimer définitivement ?")) {
         tasks = tasks.filter(t => t.id !== id);
@@ -420,14 +407,12 @@
     document.querySelectorAll('.lvl-btn')[n-1].classList.add('active');
   }
 
-  // --- CORRECTION BUG SORTABLE : VARIABLE GLOBALE ---
   let sortableInstance = null;
 
   function initSortable() {
     const listEl = document.getElementById('list');
     if (!listEl) return;
 
-    // DESTROY l'ancienne instance avant d'en créer une nouvelle (Fix Bug Mobile)
     if (sortableInstance) {
         sortableInstance.destroy();
         sortableInstance = null;
@@ -435,19 +420,17 @@
 
     sortableInstance = new Sortable(listEl, {
         animation: 150,
-        delay: 300, // Appui long 300ms
+        delay: 300, 
         delayOnTouchOnly: true, 
         touchStartThreshold: 5,
         chosenClass: "sortable-chosen",
         dragClass: "sortable-drag",
         onEnd: function (evt) {
-            // Logique de re-ordering (synchroniser avec Firebase)
             const newOrderIds = Array.from(document.querySelectorAll('.task-item')).map(el => parseInt(el.getAttribute('data-id')));
             const activeTasksMap = new Map(tasks.filter(t => !t.done).map(t => [t.id, t]));
             const doneTasks = tasks.filter(t => t.done);
             const reorderedActiveTasks = newOrderIds.map(id => activeTasksMap.get(id)).filter(t => t);
             
-            // On met à jour l'ordre global
             tasks = [...reorderedActiveTasks, ...doneTasks];
             saveToCloud();
         }
@@ -460,7 +443,7 @@
     if (!txt) return;
     const newTask = { id: Date.now(), txt: txt, lvl: currentLvl, created: Date.now(), done: null };
     if (!Array.isArray(tasks)) tasks = [];
-    tasks.push(newTask);
+    tasks.unshift(newTask); // Ajoute au début
     saveToCloud();
     inp.value = ''; 
     inp.blur(); 
@@ -473,9 +456,13 @@
     
     box.innerHTML = '';
     if (activeTasks.length === 0) { box.innerHTML = `<div class="empty-msg">Aucune mission en cours.<br>Profites-en pour explorer ! 🚀</div>`; return; }
-    activeTasks.forEach(t => box.appendChild(createTaskElement(t, false)));
     
-    // IMPORTANT: Appeler initSortable APRES avoir rempli la liste
+    activeTasks.forEach(t => {
+        // Animation si créé il y a moins de 1000ms
+        const isNew = (Date.now() - t.created) < 1000;
+        box.appendChild(createTaskElement(t, isNew));
+    });
+    
     initSortable();
   }
 
@@ -500,7 +487,7 @@
 
   function createTaskElement(t, isNew) {
     const el = document.createElement('div'); el.className = isNew ? 'task-item new-entry' : 'task-item'; el.id = 'task-' + t.id;
-    el.setAttribute('data-id', t.id); // Important pour sortable
+    el.setAttribute('data-id', t.id); 
     let badgeColor = t.lvl===1 ? 'var(--c-green)' : (t.lvl===2 ? 'var(--c-yellow)' : 'var(--c-red)');
     let badgeTxt = t.lvl===1 ? 'Easy' : (t.lvl===2 ? 'Medium' : 'Hard');
     const aura = getAuraHTML(t.lvl);
