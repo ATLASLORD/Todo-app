@@ -45,7 +45,13 @@
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html { scrollbar-gutter: stable; }
+    
+    /* FIX SCROLL HORIZONTAL */
+    html { 
+      scrollbar-gutter: stable; 
+      overflow-x: hidden; /* Empêche le scroll horizontal global */
+      width: 100%;
+    }
 
     body {
       margin: 0; min-height: 100vh; font-family: 'Nunito', sans-serif;
@@ -53,7 +59,13 @@
       display: flex; justify-content: center; padding: 20px;
       padding-top: max(20px, env(safe-area-inset-top));
       padding-bottom: max(20px, env(safe-area-inset-bottom));
-      overflow-y: auto; overscroll-behavior-y: none;
+      
+      /* GESTION SCROLL */
+      overflow-y: auto; 
+      overflow-x: hidden; /* Double sécurité pour le scroll horizontal */
+      overscroll-behavior-y: none;
+      width: 100%;
+      position: relative;
       transition: background-color 0.3s ease;
     }
 
@@ -108,7 +120,7 @@
     .page { display: none; } .page.active { display: block; }
     .list-container { display: flex; flex-direction: column; min-height: 100px; padding-top: 10px; }
 
-    /* --- TASK ITEM COMPACT --- */
+    /* TASK ITEM COMPACT */
     .task-item { 
       display: flex; align-items: center; 
       background: var(--card); 
@@ -120,7 +132,7 @@
       position: relative; 
       transition: max-height 0.5s ease, margin-bottom 0.5s ease, padding 0.5s ease, border-width 0.4s ease, opacity 0.1s ease; 
       max-height: 120px; 
-      margin-bottom: 10px; 
+      margin-bottom: 10px;
       opacity: 1; 
       transform-origin: center; overflow: visible; z-index: 1; 
       touch-action: manipulation; 
@@ -265,6 +277,20 @@
   // --- AUDIO ZERO LATENCE (WEB AUDIO API) ---
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const buffers = {};
+
+  // Unlocker silencieux pour mobile (premier touch)
+  const unlockAudio = () => {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const buffer = audioCtx.createBuffer(1, 1, 22050);
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+    source.start(0);
+    window.removeEventListener('touchstart', unlockAudio);
+    window.removeEventListener('click', unlockAudio);
+  };
+  window.addEventListener('touchstart', unlockAudio);
+  window.addEventListener('click', unlockAudio);
 
   async function loadSound(name, url) {
     try {
