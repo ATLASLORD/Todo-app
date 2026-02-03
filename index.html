@@ -110,8 +110,8 @@
     .task-item { 
       display: flex; align-items: center; 
       background: var(--card); border: var(--outline-width) solid var(--outline); border-radius: 16px; 
-      padding: 8px 8px 8px 12px; 
-      gap: 10px; 
+      padding: 8px 10px 8px 12px; 
+      gap: 12px; 
       box-shadow: 5px 5px 0 rgba(0,0,0,0.2); 
       position: relative; 
       transition: max-height 0.5s ease, margin-bottom 0.5s ease, padding 0.5s ease, border-width 0.4s ease, opacity 0.1s ease; 
@@ -127,7 +127,7 @@
     .task-item.cut-hidden { opacity: 0 !important; pointer-events: none; }
     .task-item.collapsed { max-height: 0 !important; margin-bottom: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; border-width: 0 !important; overflow: hidden; }
 
-    /* CHECKBOX */
+    /* CHECKBOX 48px PRESERVÉE */
     .check-box { width: 48px; height: 48px; border: 3px solid var(--outline); border-radius: 12px; cursor: pointer; display: grid; place-items: center; background: var(--card); transition: transform 0.1s; flex-shrink: 0; position: relative; z-index: 5; }
     .check-box:active { transform: scale(0.9); }
     .check-box svg { width: 24px; opacity: 0; transition: 0.2s; stroke: var(--text); stroke-width: 4px; stroke-linecap: round; stroke-linejoin: round;}
@@ -137,27 +137,30 @@
     /* TEXTE */
     .task-txt { flex: 1; font-weight: 800; font-size: 16px; z-index: 5; word-break: break-word; min-width: 0; margin-right: 2px; }
 
-    /* COLONNE DROITE (Croix + Point) */
+    /* --- NOUVEAU DESIGN DE LA COLONNE DROITE (CORRIGÉ) --- */
     .right-col {
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        gap: 8px; flex-shrink: 0; width: 24px;
+        gap: 10px; /* Espace augmenté */
+        flex-shrink: 0; width: 32px; /* Colonne plus large */
     }
 
-    /* LE POINT DE NIVEAU (REMPLACE LE BADGE TEXTE) */
+    /* POINT DE NIVEAU */
     .task-tag { 
-        width: 14px; height: 14px; border-radius: 50%;
-        border: 1px solid rgba(0,0,0,0.1);
+        width: 16px; height: 16px; /* Plus gros */
+        border-radius: 50%;
+        border: 2px solid var(--outline);
         z-index: 5; flex-shrink: 0;
     }
 
     /* CROIX ROUGE */
     .btn-delete {
-      color: var(--c-red); font-size: 22px; font-weight: 900;
-      cursor: pointer; line-height: 1;
+      color: var(--c-red); font-size: 26px; font-weight: 900; /* Plus gros */
+      cursor: pointer; 
       transition: transform 0.2s;
       -webkit-tap-highlight-color: transparent;
       display: flex; align-items: center; justify-content: center;
-      width: 24px; height: 24px;
+      width: 32px; height: 32px;
+      padding-bottom: 3px; /* Centrage optique */
     }
     .btn-delete:active { transform: scale(1.2); }
 
@@ -532,7 +535,6 @@
     
     box.innerHTML = '';
     if (activeTasks.length === 0) { 
-    // Liste des phrases possibles
     const phrases = [
         "La Tranquillité Absolue.",
         "Le vide intersidéral... C'est beau, non ?",
@@ -549,10 +551,7 @@
         "Tu regardes le vide, et le vide te regarde.",
         "Respire. Apprécie le vide."
     ];
-    
-    // Pioche une phrase au hasard
     const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-
     box.innerHTML = `<div class="empty-msg">${randomPhrase}</div>`; 
     return; 
 }
