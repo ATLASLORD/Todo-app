@@ -8,6 +8,16 @@
   
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.png">
+
+  <script>
+    (function() {
+      const localTheme = localStorage.getItem('kurz_theme');
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (localTheme === 'dark' || (!localTheme && systemDark)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +25,7 @@
   
   <style>
     /* =========================================
-       THEME & VARIABLES
+       THEME FLAT DESIGN (Etoiles & Arrondis)
        ========================================= */
     :root {
       /* MODE JOUR */
@@ -42,7 +52,7 @@
     }
 
     /* MODE NUIT */
-    [data-theme="dark"] {
+    html[data-theme="dark"] {
       --bg-base: #0c121b; 
       --star-color: 255, 255, 255;
 
@@ -69,16 +79,16 @@
       display: flex;
       justify-content: center;
       padding: 20px;
-      /* Gestion encoche iPhone */
       padding-top: max(20px, env(safe-area-inset-top));
       padding-bottom: max(20px, env(safe-area-inset-bottom));
       overflow-y: auto; 
       overscroll-behavior-y: none;
+      transition: background-color 0.3s ease;
     }
 
     #starfield { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -10; pointer-events: none; }
 
-    /* --- LOGIN OVERLAY (Style Flat) --- */
+    /* --- LOGIN OVERLAY --- */
     #login-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: var(--bg-base); z-index: 9999;
@@ -100,7 +110,7 @@
     }
     .btn-login:active { transform: translate(2px, 2px); box-shadow: none; }
 
-    /* --- APP (Masquée par défaut) --- */
+    /* --- APP --- */
     .app {
       width: 100%; max-width: 600px; display: none;
       flex-direction: column; gap: 25px; padding-bottom: 80px; z-index: 1;
@@ -252,20 +262,20 @@
 </div>
 
 <script type="module">
-  // --- 1. FIREBASE SETUP (Configuration copiée de votre capture) ---
+  // --- 1. FIREBASE SETUP ---
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
   import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+  // Configuration issue de votre capture (avec URL complétée)
   const firebaseConfig = {
-    apiKey: "AIzaSyDn0f67RrQ48f_oJMn07PO5_RFkd1o15-c",
+    apiKey: "AIzaSyDn0f67RRq48f_oJMn07PO5_RFkd1o15-c",
     authDomain: "todolist-f1ea8.firebaseapp.com",
-    // J'ai reconstitué l'URL d'après votre capture d'écran (Project ID + Region)
     databaseURL: "https://todolist-f1ea8-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "todolist-f1ea8",
     storageBucket: "todolist-f1ea8.firebasestorage.app",
     messagingSenderId: "54632201976",
-    appId: "1:54632201976:web:48dd4f336d9a88ffd4c50d"
+    appId: "1:54632201976:web:ec4c9785dc9846d4d4c50d"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -335,15 +345,13 @@
 
   // --- THEME ---
   window.toggleTheme = function() {
-    const body = document.body;
-    const isDark = body.getAttribute('data-theme') === 'dark';
-    const newTheme = isDark ? 'light' : 'dark';
-    body.setAttribute('data-theme', newTheme);
-    localStorage.setItem('kurz_theme', newTheme);
+    const el = document.documentElement;
+    const current = el.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    el.setAttribute('data-theme', next);
+    localStorage.setItem('kurz_theme', next);
     drawStars();
   }
-  const savedTheme = localStorage.getItem('kurz_theme');
-  if(savedTheme === 'dark') document.body.setAttribute('data-theme', 'dark');
 
   // --- STARS ---
   const canvas = document.getElementById('starfield');
