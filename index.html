@@ -59,10 +59,14 @@
       transition: background-color 0.3s ease;
     }
 
+    /* CANVAS DE FOND (ETOILES) */
     #starfield { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -10; pointer-events: none; }
 
-    /* CALQUE FX (Indépendant du layout principal) */
-    #fx-layer {
+    /* NOUVEAU CANVAS FX (PARTICULES AU DESSUS DE TOUT) */
+    #fx-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20000; }
+
+    /* CALQUE POUR LES CLONES (ECLATEMENT CASE) */
+    #clone-layer {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       pointer-events: none; z-index: 9999; overflow: hidden;
     }
@@ -159,6 +163,7 @@
     }
     .btn-delete:active { transform: scale(1.2); }
 
+    /* LES CLONES SONT MAINTENANT DANS CE LAYER SPECIAL */
     .clone-half { 
       position: absolute; z-index: 9999; 
       background: var(--card); border: var(--outline-width) solid var(--outline); 
@@ -181,12 +186,6 @@
     .aura-dot { position: absolute; background-color: var(--c-dot); opacity: 0; border: 1px solid rgba(0,0,0,0.1); animation: driftOut linear infinite; }
     .aura-dot.sq { border-radius: 2px; }
     @keyframes driftOut { 0% { transform: translate(0, 0) scale(0.2); opacity: 0; } 10% { opacity: 0.8; } 100% { transform: translate(var(--tx), var(--ty)) scale(1.2); opacity: 0; } }
-
-    .particle { 
-      position: absolute; pointer-events: none; z-index: 10001; border-radius: 50%; 
-      will-change: transform, opacity; /* Optimisation GPU */
-    }
-    .particle.square { border-radius: 2px; }
 
     .empty-msg { text-align: center; color: var(--c-grey); font-weight: 800; padding: 40px 20px; border: 2px dashed var(--outline); border-radius: 16px; animation: fadeInMsg 0.5s ease-out; background: var(--empty-bg); }
     @keyframes fadeInMsg { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -220,7 +219,9 @@
 
 <canvas id="starfield"></canvas>
 
-<div id="fx-layer"></div>
+<canvas id="fx-canvas"></canvas>
+
+<div id="clone-layer"></div>
 
 <div id="login-overlay">
   <div class="login-box">
@@ -390,6 +391,7 @@
     drawStars();
   }
 
+  // --- MOTEUR ETOILES (Fond) ---
   const canvas = document.getElementById('starfield');
   const ctx = canvas.getContext('2d');
   let stars = [];
@@ -407,6 +409,73 @@
   function animateStars() { ctx.clearRect(0, 0, width, height); stars.forEach(s => { s.update(); s.draw(); }); requestAnimationFrame(animateStars); }
   window.drawStars = function() { ctx.clearRect(0, 0, width, height); stars.forEach(s => s.draw()); }
   window.addEventListener('resize', resizeCanvas); resizeCanvas(); animateStars();
+
+  // --- MOTEUR PARTICULES (Canvas FX) ---
+  const fxCanvas = document.getElementById('fx-canvas');
+  const fxCtx = fxCanvas.getContext('2d');
+  let particles = [];
+  
+  function resizeFxCanvas() { fxCanvas.width = window.innerWidth; fxCanvas.height = window.innerHeight; }
+  window.addEventListener('resize', resizeFxCanvas); resizeFxCanvas();
+
+  class Particle {
+      constructor(x, y, color) {
+          this.x = x; this.y = y;
+          this.color = color;
+          this.size = Math.random() * 10 + 6;
+          this.isSquare = Math.random() > 0.5;
+          const angle = Math.random() * Math.PI * 2;
+          const velocity = Math.random() * 10 + 5;
+          this.vx = Math.cos(angle) * velocity;
+          this.vy = Math.sin(angle) * velocity;
+          this.life = 1.0;
+      }
+      update() {
+          this.life -= 0.03;
+          this.vx *= 0.9;
+          this.vy *= 0.9;
+          this.vy += 0.8; // Gravité
+          this.x += this.vx;
+          this.y += this.vy;
+      }
+      draw() {
+          fxCtx.globalAlpha = this.life;
+          fxCtx.fillStyle = this.color;
+          if (this.isSquare) {
+              fxCtx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+          } else {
+              fxCtx.beginPath();
+              fxCtx.arc(this.x, this.y, this.size/2, 0, Math.PI * 2);
+              fxCtx.fill();
+          }
+          fxCtx.globalAlpha = 1.0;
+      }
+  }
+
+  function loopFx() {
+      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+      for (let i = particles.length - 1; i >= 0; i--) {
+          particles[i].update();
+          particles[i].draw();
+          if (particles[i].life <= 0) particles.splice(i, 1);
+      }
+      requestAnimationFrame(loopFx);
+  }
+  loopFx();
+
+  function spawnCanvasParticles(x, y, isLine = false) {
+      const colors = ['#00cec9', '#fdcb6e', '#ff7675', '#00b894', '#f5f6fa'];
+      const count = isMobile ? (isLine ? 15 : 10) : (isLine ? 30 : 20);
+      for (let i = 0; i < count; i++) {
+          let startX = x, startY = y;
+          if (isLine) { 
+              startX = x + (Math.random()-0.5)*300; 
+              startY = y + (Math.random()-0.5)*20; 
+          }
+          const col = colors[Math.floor(Math.random() * colors.length)];
+          particles.push(new Particle(startX, startY, col));
+      }
+  }
 
   window.nav = function(p) {
     playWhipSound();
@@ -482,47 +551,6 @@
     initSortable();
   }
 
-  // --- PARTICULES OPTIMISÉES AVEC WAAPI (GPU) ---
-  function spawnParticles(x, y, isLine = false) {
-    const colors = ['#00cec9', '#fdcb6e', '#ff7675', '#00b894', '#f5f6fa'];
-    const particleCount = isMobile ? (isLine ? 15 : 10) : (isLine ? 30 : 20);
-    const layer = document.getElementById('fx-layer');
-
-    for (let i = 0; i < particleCount; i++) {
-      const p = document.createElement('div'); 
-      p.classList.add('particle');
-      if (Math.random() > 0.5) p.classList.add('square');
-      p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-      
-      const size = Math.random() * 10 + 6; 
-      p.style.width = size + 'px'; 
-      p.style.height = size + 'px';
-      
-      let startX = x, startY = y;
-      if (isLine) { startX = x + (Math.random()-0.5)*300; startY = y + (Math.random()-0.5)*20; }
-      
-      // Position initiale
-      p.style.left = startX + 'px';
-      p.style.top = startY + 'px';
-      
-      layer.appendChild(p);
-
-      const angle = Math.random() * Math.PI * 2; 
-      const velocity = Math.random() * 100 + 50; // Distance projetée
-      
-      // Animation via Web Animations API (Performances maximales)
-      const anim = p.animate([
-        { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-        { transform: `translate(${Math.cos(angle)*velocity}px, ${Math.sin(angle)*velocity + 100}px) scale(0)`, opacity: 0 }
-      ], {
-        duration: Math.random() * 500 + 300,
-        easing: 'cubic-bezier(0, .9, .57, 1)'
-      });
-
-      anim.onfinish = () => p.remove();
-    }
-  }
-
   function getAuraHTML(level) {
     const color = level === 1 ? 'var(--c-green)' : (level === 2 ? 'var(--c-yellow)' : 'var(--c-red)');
     let htmlBase = '', htmlTurbo = '';
@@ -565,8 +593,8 @@
     const appEl = document.getElementById('app');
     appEl.classList.remove('shake'); void appEl.offsetWidth; appEl.classList.add('shake');
     
-    // CLONES DANS LE FX LAYER
-    const layer = document.getElementById('fx-layer');
+    // CLONES DANS LE CLONE LAYER
+    const layer = document.getElementById('clone-layer');
     const cloneTop = row.cloneNode(true); const cloneBot = row.cloneNode(true);
     
     [cloneTop, cloneBot].forEach(c => {
@@ -584,7 +612,9 @@
     
     row.classList.add('cut-hidden');
     spawnSlashLine(rect, -3); 
-    spawnParticles(rect.left + rect.width/2, rect.top + rect.height/2, true);
+    
+    // PARTICULES SUR CANVAS FX
+    spawnCanvasParticles(rect.left + rect.width/2, rect.top + rect.height/2, true);
     
     requestAnimationFrame(() => {
         void cloneTop.offsetWidth;
@@ -605,7 +635,7 @@
     flash.style.width = w + 'px'; flash.style.left = (rect.left - 20) + 'px'; flash.style.top = (rect.top + rect.height/2) + 'px';
     flash.style.transform = `rotate(${angleDeg}deg)`; 
     
-    document.getElementById('fx-layer').appendChild(flash);
+    document.getElementById('clone-layer').appendChild(flash);
     
     const anim = flash.animate([{transform:`rotate(${angleDeg}deg) scaleX(0)`, opacity:0.5}, {transform:`rotate(${angleDeg}deg) scaleX(1)`, opacity:1, offset:0.2}, {transform:`rotate(${angleDeg}deg) scaleX(1)`, opacity:0}], {duration:300, easing:'ease-out'});
     anim.onfinish = () => flash.remove();
