@@ -25,7 +25,7 @@
   
   <style>
     /* =========================================
-       THEME FLAT DESIGN (Etoiles & Arrondis)
+       THEME FLAT DESIGN
        ========================================= */
     :root {
       /* MODE JOUR */
@@ -88,7 +88,7 @@
 
     #starfield { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -10; pointer-events: none; }
 
-    /* --- LOGIN OVERLAY --- */
+    /* LOGIN OVERLAY */
     #login-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: var(--bg-base); z-index: 9999;
@@ -110,7 +110,7 @@
     }
     .btn-login:active { transform: translate(2px, 2px); box-shadow: none; }
 
-    /* --- APP --- */
+    /* APP */
     .app {
       width: 100%; max-width: 600px; display: none;
       flex-direction: column; gap: 25px; padding-bottom: 80px; z-index: 1;
@@ -227,7 +227,7 @@
     <div class="title-row">
       <h1>To-Do</h1>
       <div class="user-controls">
-        <div class="theme-toggle btn-icon" onclick="toggleTheme()" title="Mode Nuit/Jour">🌍</div>
+        <div class="theme-toggle btn-icon" onclick="toggleTheme()" title="Mode Nuit/Jour">🌓</div>
         <div class="theme-toggle btn-icon" onclick="logout()" title="Déconnexion">🚪</div>
       </div>
     </div>
@@ -267,7 +267,7 @@
   import { getDatabase, ref, set, onValue, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
   import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-  // Configuration issue de votre capture (avec URL complétée)
+  // CONFIGURATION FIREBASE EXACTE
   const firebaseConfig = {
     apiKey: "AIzaSyDn0f67RRq48f_oJMn07PO5_RFkd1o15-c",
     authDomain: "todolist-f1ea8.firebaseapp.com",
@@ -289,6 +289,26 @@
   let currentUser = null;
   let unsubscribeDB = null;
 
+  // --- AUDIO (Katana & Whip) ---
+  const katanaSound = new Audio('SFX_Feedback_Hit_Weakness_06.wav');
+  katanaSound.volume = 0.5;
+  
+  // Nouveau son pour la navigation (Missions/Archives)
+  const whipSound = new Audio('tinyWhip.wav');
+  whipSound.volume = 0.5;
+
+  function playKatanaSound() {
+      katanaSound.currentTime = 0;
+      const p = katanaSound.play();
+      if(p !== undefined) p.catch(() => {});
+  }
+
+  function playWhipSound() {
+      whipSound.currentTime = 0;
+      const p = whipSound.play();
+      if(p !== undefined) p.catch(() => {});
+  }
+
   // --- AUTHENTIFICATION ---
   window.login = function() {
     signInWithPopup(auth, provider).catch(err => alert("Erreur: " + err.message));
@@ -303,7 +323,6 @@
     const appUI = document.getElementById('app');
 
     if (user) {
-      // Connecté
       currentUser = user;
       overlay.style.opacity = '0';
       setTimeout(() => { overlay.style.display = 'none'; appUI.classList.add('visible'); }, 500);
@@ -318,7 +337,6 @@
       });
 
     } else {
-      // Déconnecté
       currentUser = null;
       overlay.style.display = 'flex';
       overlay.style.opacity = '1';
@@ -332,15 +350,6 @@
     if (!currentUser) return;
     const userTasksRef = ref(db, `users/${currentUser.uid}/todos`);
     set(userTasksRef, tasks);
-  }
-
-  // --- AUDIO ---
-  const katanaSound = new Audio('SFX_Feedback_Hit_Weakness_06.wav');
-  katanaSound.volume = 0.5;
-  function playKatanaSound() {
-      katanaSound.currentTime = 0;
-      const p = katanaSound.play();
-      if(p !== undefined) p.catch(() => {});
   }
 
   // --- THEME ---
@@ -398,6 +407,9 @@
 
   // --- LOGIC ---
   window.nav = function(p) {
+    // Jouer le son whip à chaque changement d'onglet
+    playWhipSound();
+    
     document.querySelectorAll('.page').forEach(e => e.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
     document.getElementById('page-'+p).classList.add('active');
