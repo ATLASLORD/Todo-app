@@ -61,7 +61,13 @@
 
     #starfield { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -10; pointer-events: none; }
 
-    #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease; }
+    /* CALQUE FX (Particules & Clones) - INDISPENSABLE POUR EVITER LE GLITCH */
+    #fx-layer {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 9999; overflow: hidden;
+    }
+
+    #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-base); z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s ease; }
     .login-box { background: var(--card); border: var(--outline-width) solid var(--outline); padding: 30px; text-align: center; max-width: 320px; border-radius: 20px; box-shadow: var(--shadow); }
     .login-title { font-size: 24px; margin-bottom: 20px; font-weight: 900; text-transform: uppercase; }
     .btn-login { background: var(--c-blue); color: white; border: var(--outline-width) solid var(--outline); border-radius: 12px; padding: 12px 24px; font-family: inherit; font-weight: 900; font-size: 16px; cursor: pointer; text-transform: uppercase; width: 100%; box-shadow: 4px 4px 0 var(--shadow-col); }
@@ -120,7 +126,7 @@
       transition: max-height 0.5s ease, margin-bottom 0.5s ease, padding 0.5s ease, border-width 0.4s ease, opacity 0.1s ease; 
       max-height: 120px; margin-bottom: 10px; opacity: 1; 
       transform-origin: center; overflow: visible; z-index: 1; 
-      touch-action: pan-y; /* Important pour SortableJS */
+      touch-action: pan-y;
     }
     
     .sortable-chosen {
@@ -131,10 +137,8 @@
     }
     .sortable-drag { opacity: 0; }
 
-    /* ANIMATION APPARITION (Pop-In) */
     .task-item.new-entry { animation: cardPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
     @keyframes cardPopIn { 0% { opacity: 0; transform: scale(0.5) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
-    
     .task-item.cut-hidden { opacity: 0 !important; pointer-events: none; }
     .task-item.collapsed { max-height: 0 !important; margin-bottom: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; border-width: 0 !important; overflow: hidden; }
 
@@ -147,7 +151,6 @@
     .task-txt { flex: 1; font-weight: 800; font-size: 16px; z-index: 5; word-break: break-word; }
     .task-tag { font-size: 11px; font-weight: 900; text-transform: uppercase; padding: 4px 8px; border-radius: 6px; border: 2px solid var(--outline); white-space: nowrap; z-index: 5; color: #2d3436; }
 
-    /* BOUTON SUPPRIMER (Croix Rouge) */
     .btn-delete {
       color: var(--c-red); font-size: 28px; font-weight: 900;
       padding: 0 10px; cursor: pointer; line-height: 1;
@@ -156,8 +159,12 @@
     }
     .btn-delete:active { transform: scale(1.2); }
 
-    .clone-half { position: fixed; z-index: 9999; background: var(--card); border: var(--outline-width) solid var(--outline); border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 12px; filter: drop-shadow(5px 5px 0px rgba(0,0,0,0.2)); pointer-events: none; box-sizing: border-box; color: var(--text); overflow: visible !important; }
-    .slash-flash { position: fixed; height: 4px; background: white; box-shadow: 0 0 10px rgba(255,255,255,0.9), 0 0 20px cyan; z-index: 10000; transform-origin: left center; pointer-events: none; border-radius: 10px; }
+    .clone-half { position: absolute; /* Modifié pour être dans fx-layer */ 
+      z-index: 9999; background: var(--card); border: var(--outline-width) solid var(--outline); border-radius: 16px; padding: 12px; display: flex; align-items: center; gap: 12px; filter: drop-shadow(5px 5px 0px rgba(0,0,0,0.2)); pointer-events: none; box-sizing: border-box; color: var(--text); overflow: visible !important; 
+    }
+    .slash-flash { position: absolute; /* Modifié pour être dans fx-layer */
+      height: 4px; background: white; box-shadow: 0 0 10px rgba(255,255,255,0.9), 0 0 20px cyan; z-index: 10000; transform-origin: left center; pointer-events: none; border-radius: 10px; 
+    }
 
     .aura-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: -1; }
     .aura-base { opacity: 0; animation: fadeInBase 1s ease-out 0.3s forwards; }
@@ -168,7 +175,9 @@
     .aura-dot.sq { border-radius: 2px; }
     @keyframes driftOut { 0% { transform: translate(0, 0) scale(0.2); opacity: 0; } 10% { opacity: 0.8; } 100% { transform: translate(var(--tx), var(--ty)) scale(1.2); opacity: 0; } }
 
-    .particle { position: fixed; pointer-events: none; z-index: 10001; border-radius: 50%; }
+    .particle { position: absolute; /* Modifié pour être dans fx-layer */ 
+      pointer-events: none; z-index: 10001; border-radius: 50%; 
+    }
     .particle.square { border-radius: 2px; }
 
     .empty-msg { text-align: center; color: var(--c-grey); font-weight: 800; padding: 40px 20px; border: 2px dashed var(--outline); border-radius: 16px; animation: fadeInMsg 0.5s ease-out; background: var(--empty-bg); }
@@ -202,6 +211,8 @@
 <body>
 
 <canvas id="starfield"></canvas>
+
+<div id="fx-layer"></div>
 
 <div id="login-overlay">
   <div class="login-box">
@@ -278,7 +289,6 @@
   let currentUser = null;
   let unsubscribeDB = null;
 
-  // --- AUDIO ZERO LATENCE (WEB AUDIO API) ---
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const buffers = {};
 
@@ -311,7 +321,6 @@
   function playSoundBuffer(name) {
     if (!buffers[name]) return;
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    
     const source = audioCtx.createBufferSource();
     source.buffer = buffers[name];
     source.connect(audioCtx.destination);
@@ -354,7 +363,6 @@
     set(userTasksRef, tasks);
   }
 
-  // --- SUPPRESSION ---
   window.del = function(id) {
     playWhipSound(); 
     if (!Array.isArray(tasks)) return;
@@ -407,7 +415,6 @@
     document.querySelectorAll('.lvl-btn')[n-1].classList.add('active');
   }
 
-  // --- INITIALISATION SORTABLE (DRAG & DROP) ---
   let sortableInstance = null;
 
   function initSortable() {
@@ -421,7 +428,7 @@
 
     sortableInstance = new Sortable(listEl, {
         animation: 150,
-        delay: 300, // Appui long 300ms
+        delay: 300, 
         delayOnTouchOnly: true, 
         touchStartThreshold: 5,
         chosenClass: "sortable-chosen",
@@ -444,7 +451,7 @@
     if (!txt) return;
     const newTask = { id: Date.now(), txt: txt, lvl: currentLvl, created: Date.now(), done: null };
     if (!Array.isArray(tasks)) tasks = [];
-    tasks.unshift(newTask); // Ajoute au début
+    tasks.unshift(newTask);
     saveToCloud();
     inp.value = ''; 
     inp.blur(); 
@@ -459,7 +466,6 @@
     if (activeTasks.length === 0) { box.innerHTML = `<div class="empty-msg">Aucune mission en cours.<br>Profites-en pour explorer ! 🚀</div>`; return; }
     
     activeTasks.forEach(t => {
-        // Animation si créé il y a moins de 1000ms
         const isNew = (Date.now() - t.created) < 1000;
         box.appendChild(createTaskElement(t, isNew));
     });
@@ -467,10 +473,12 @@
     initSortable();
   }
 
-  // --- PARTICULES OPTIMISEES (TRANSFORM) ---
+  // --- PARTICULES & CLONES DANS LE FX LAYER ---
   function spawnParticles(x, y, isLine = false) {
     const colors = ['#00cec9', '#fdcb6e', '#ff7675', '#00b894', '#f5f6fa'];
     const particleCount = isMobile ? (isLine ? 15 : 10) : (isLine ? 30 : 20);
+    const layer = document.getElementById('fx-layer'); // CIBLE FX LAYER
+
     for (let i = 0; i < particleCount; i++) {
       const p = document.createElement('div'); 
       p.classList.add('particle');
@@ -481,22 +489,14 @@
       p.style.width = size + 'px'; 
       p.style.height = size + 'px';
       
-      // POSITION FIXE (Ne bouge pas avec le scroll/layout)
-      p.style.position = 'fixed';
-      p.style.willChange = 'transform, opacity';
-      
-      // Position initiale
       let startX = x, startY = y;
       if (isLine) { startX = x + (Math.random()-0.5)*300; startY = y + (Math.random()-0.5)*20; }
       
-      p.style.left = '0';
-      p.style.top = '0';
-      
-      // On utilise translate pour positionner ET bouger
+      p.style.left = '0'; p.style.top = '0';
       let currentX = startX;
       let currentY = startY;
 
-      document.body.appendChild(p);
+      layer.appendChild(p);
 
       const angle = Math.random() * Math.PI * 2; 
       const velocity = Math.random() * 10 + 5;
@@ -506,16 +506,10 @@
 
       function update() {
         life -= 0.03; 
-        vx *= 0.9; 
-        vy *= 0.9; 
-        vy += 0.8; // Gravity
-
-        currentX += vx;
-        currentY += vy;
-
+        vx *= 0.9; vy *= 0.9; vy += 0.8;
+        currentX += vx; currentY += vy;
         p.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) scale(${life})`;
         p.style.opacity = life;
-
         if (life > 0) requestAnimationFrame(update); else p.remove();
       }
       requestAnimationFrame(update);
@@ -559,21 +553,30 @@
     const row = document.getElementById('task-' + id); if(!row) return;
     playKatanaSound(); btn.classList.add('checked');
     const rect = row.getBoundingClientRect();
-    document.getElementById('app').classList.remove('shake'); void document.getElementById('app').offsetWidth; document.getElementById('app').classList.add('shake');
+    
+    // Reset shake
+    const appEl = document.getElementById('app');
+    appEl.classList.remove('shake'); void appEl.offsetWidth; appEl.classList.add('shake');
+    
+    // CLONES DANS LE FX LAYER
+    const layer = document.getElementById('fx-layer');
     const cloneTop = row.cloneNode(true); const cloneBot = row.cloneNode(true);
+    
     [cloneTop, cloneBot].forEach(c => {
       c.id = ""; c.classList.remove('new-entry'); c.style.margin = "0";
       c.style.width = rect.width + "px"; c.style.height = rect.height + "px";
-      c.style.position = "fixed"; c.style.left = rect.left + "px"; c.style.top = rect.top + "px";
+      c.style.position = "absolute"; // Absolu dans le layer fixe
+      c.style.left = rect.left + "px"; c.style.top = rect.top + "px";
       c.style.transition = "transform 0.5s ease-in, opacity 0.5s ease-in";
     });
+    
     cloneTop.style.clipPath = "polygon(-100% -100%, 200% -100%, 200% 45%, -100% 55%)";
     cloneBot.style.clipPath = "polygon(-100% 55%, 200% 45%, 200% 200%, -100% 200%)";
-    document.body.appendChild(cloneTop); document.body.appendChild(cloneBot);
+    
+    layer.appendChild(cloneTop); layer.appendChild(cloneBot);
+    
     row.classList.add('cut-hidden');
     spawnSlashLine(rect, -3); 
-    
-    // NOUVELLE FONCTION PARTICULES QUI NE JITTER PAS
     spawnParticles(rect.left + rect.width/2, rect.top + rect.height/2, true);
     
     requestAnimationFrame(() => {
@@ -593,7 +596,10 @@
     const flash = document.createElement('div'); flash.className = 'slash-flash';
     const w = Math.sqrt(rect.width*rect.width + rect.height*rect.height) * 1.2;
     flash.style.width = w + 'px'; flash.style.left = (rect.left - 20) + 'px'; flash.style.top = (rect.top + rect.height/2) + 'px';
-    flash.style.transform = `rotate(${angleDeg}deg)`; document.body.appendChild(flash);
+    flash.style.transform = `rotate(${angleDeg}deg)`; 
+    
+    document.getElementById('fx-layer').appendChild(flash); // DANS FX LAYER
+    
     const anim = flash.animate([{transform:`rotate(${angleDeg}deg) scaleX(0)`, opacity:0.5}, {transform:`rotate(${angleDeg}deg) scaleX(1)`, opacity:1, offset:0.2}, {transform:`rotate(${angleDeg}deg) scaleX(1)`, opacity:0}], {duration:300, easing:'ease-out'});
     anim.onfinish = () => flash.remove();
   }
