@@ -262,14 +262,37 @@
   let currentUser = null;
   let unsubscribeDB = null;
 
-  const katanaSound = new Audio('SFX_Feedback_Hit_Weakness_06.wav');
-  katanaSound.volume = 0.5;
-  const whipSound = new Audio('tinyWhip.wav');
-  whipSound.volume = 0.5;
+  // --- AUDIO ZERO LATENCE (WEB AUDIO API) ---
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const buffers = {};
 
-  function playKatanaSound() { katanaSound.currentTime = 0; katanaSound.play().catch(() => {}); }
-  function playWhipSound() { whipSound.currentTime = 0; whipSound.play().catch(() => {}); }
+  async function loadSound(name, url) {
+    try {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+      buffers[name] = audioBuffer;
+    } catch (e) { console.log("Erreur chargement son:", name); }
+  }
 
+  // On charge les sons en mémoire dès le début
+  loadSound('katana', 'SFX_Feedback_Hit_Weakness_06.wav');
+  loadSound('whip', 'tinyWhip.wav');
+
+  function playSoundBuffer(name) {
+    if (!buffers[name]) return;
+    // Réveille le moteur audio s'il s'est endormi
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffers[name];
+    source.connect(audioCtx.destination);
+    // Permet de rejouer le son immédiatement même s'il n'est pas fini (pour les clics rapides)
+    source.start(0);
+  }
+
+  function playKatanaSound() { playSoundBuffer('katana'); }
+  function playWhipSound() { playSoundBuffer('whip'); }
   window.login = function() { signInWithPopup(auth, provider).catch(err => alert("Erreur: " + err.message)); }
   window.logout = function() { signOut(auth).then(() => window.location.reload()); }
 
