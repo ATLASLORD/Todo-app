@@ -531,7 +531,25 @@
     const activeTasks = safeTasks.filter(t => !t.done); 
     
     box.innerHTML = '';
-    if (activeTasks.length === 0) { box.innerHTML = `<div class="empty-msg">Aucune mission en cours.<br>Profites-en pour explorer ! 🚀</div>`; return; }
+    if (activeTasks.length === 0) { 
+    // Liste des phrases possibles
+    const phrases = [
+        "La Tranquillité Absolue.",
+        "Le vide intersidéral... C'est beau, non ?",
+        "Houston ? On a fini tous les problèmes.",
+        "Regarde-moi toute cette place pour de nouvelles galères !",
+        "L'art de ne rien faire est une mission en soi.",
+        "Houston ? On a réglé tous les problèmes.",
+        "L'esprit est clair comme cette liste.",
+        "Respire. Apprécie le vide."
+    ];
+    
+    // Pioche une phrase au hasard
+    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+
+    box.innerHTML = `<div class="empty-msg">${randomPhrase}</div>`; 
+    return; 
+}
     
     activeTasks.forEach(t => {
         const isNew = (Date.now() - t.created) < 1000;
