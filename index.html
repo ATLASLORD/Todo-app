@@ -47,15 +47,29 @@
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html { scrollbar-gutter: stable; overflow-x: hidden; }
+    
+    /* GESTION SCROLL */
+    html { 
+      scrollbar-gutter: stable;
+      overflow-x: hidden; 
+    }
 
     body {
-      margin: 0; min-height: 100vh; font-family: 'Nunito', sans-serif;
-      color: var(--text); background-color: var(--bg-base);
-      display: flex; justify-content: center; padding: 20px;
+      margin: 0; 
+      min-height: 100vh; 
+      font-family: 'Nunito', sans-serif;
+      color: var(--text); 
+      background-color: var(--bg-base);
+      display: flex; 
+      justify-content: center; 
+      padding: 20px;
       padding-top: max(20px, env(safe-area-inset-top));
       padding-bottom: max(20px, env(safe-area-inset-bottom));
-      overflow-x: hidden; width: 100%; position: relative;
+      
+      /* Scroll vertical autorisé, horizontal bloqué */
+      overflow-x: hidden; 
+      width: 100%;
+      position: relative;
       transition: background-color 0.3s ease;
     }
 
@@ -120,17 +134,17 @@
       transition: max-height 0.5s ease, margin-bottom 0.5s ease, padding 0.5s ease, border-width 0.4s ease, opacity 0.1s ease; 
       max-height: 120px; margin-bottom: 10px; opacity: 1; 
       transform-origin: center; overflow: visible; z-index: 1; 
-      touch-action: pan-y; /* Important pour le drag & drop */
+      touch-action: pan-y; /* Important pour SortableJS */
     }
     
-    /* Style quand on attrape une tâche */
+    /* Style Drag & Drop */
     .sortable-chosen {
         background: var(--input-focus) !important;
         transform: scale(1.02);
         box-shadow: 8px 8px 0 rgba(0,0,0,0.3) !important;
         z-index: 100 !important;
     }
-    .sortable-drag { opacity: 0; } /* Cache l'original pendant le drag */
+    .sortable-drag { opacity: 0; }
 
     .task-item.new-entry { animation: cardPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
     @keyframes cardPopIn { 0% { opacity: 0; transform: scale(0.5) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
@@ -355,7 +369,7 @@
 
   // --- SUPPRESSION ---
   window.del = function(id) {
-    playWhipSound(); // Son de suppression
+    playWhipSound(); // Son suppression
     if (!Array.isArray(tasks)) return;
     if(confirm("Supprimer définitivement ?")) {
         tasks = tasks.filter(t => t.id !== id);
@@ -406,34 +420,34 @@
     document.querySelectorAll('.lvl-btn')[n-1].classList.add('active');
   }
 
-  // --- INITIALISATION SORTABLE (DRAG & DROP) ---
+  // --- CORRECTION BUG SORTABLE : VARIABLE GLOBALE ---
+  let sortableInstance = null;
+
   function initSortable() {
-    new Sortable(document.getElementById('list'), {
+    const listEl = document.getElementById('list');
+    if (!listEl) return;
+
+    // DESTROY l'ancienne instance avant d'en créer une nouvelle (Fix Bug Mobile)
+    if (sortableInstance) {
+        sortableInstance.destroy();
+        sortableInstance = null;
+    }
+
+    sortableInstance = new Sortable(listEl, {
         animation: 150,
-        delay: 300, // Appui long 300ms pour activer sur mobile
-        delayOnTouchOnly: true, // Pas de délai sur PC
-        touchStartThreshold: 5, // Tolérance tremblement
+        delay: 300, // Appui long 300ms
+        delayOnTouchOnly: true, 
+        touchStartThreshold: 5,
         chosenClass: "sortable-chosen",
         dragClass: "sortable-drag",
         onEnd: function (evt) {
-            // Logique de réorganisation ici si nécessaire
-            // Pour l'instant, on laisse visuel
-            // Pour persister l'ordre, il faudrait une logique plus complexe de mapping
-            // avec le tableau 'tasks', mais pour un usage simple, le visuel suffit
-            // tant que l'utilisateur ne recharge pas la page.
-            
-            // Pour persister vraiment l'ordre, on va tricher :
-            // On reconstruit le tableau tasks en fonction du DOM
-            const newOrderIds = Array.from(document.querySelectorAll('.task-item')).map(el => parseInt(el.id.replace('task-', '')));
-            
-            // On sépare les tâches actives (visibles) des tâches terminées (cachées)
+            // Logique de re-ordering (synchroniser avec Firebase)
+            const newOrderIds = Array.from(document.querySelectorAll('.task-item')).map(el => parseInt(el.getAttribute('data-id')));
             const activeTasksMap = new Map(tasks.filter(t => !t.done).map(t => [t.id, t]));
             const doneTasks = tasks.filter(t => t.done);
+            const reorderedActiveTasks = newOrderIds.map(id => activeTasksMap.get(id)).filter(t => t);
             
-            // On recrée la liste des tâches actives dans le bon ordre
-            const reorderedActiveTasks = newOrderIds.map(id => activeTasksMap.get(id)).filter(t => t); // filter pour sécurité
-            
-            // On recombine tout (les nouvelles actives + les anciennes terminées)
+            // On met à jour l'ordre global
             tasks = [...reorderedActiveTasks, ...doneTasks];
             saveToCloud();
         }
@@ -446,7 +460,7 @@
     if (!txt) return;
     const newTask = { id: Date.now(), txt: txt, lvl: currentLvl, created: Date.now(), done: null };
     if (!Array.isArray(tasks)) tasks = [];
-    tasks.push(newTask); // Ajoute à la fin par défaut
+    tasks.push(newTask);
     saveToCloud();
     inp.value = ''; 
     inp.blur(); 
@@ -454,7 +468,6 @@
 
   function renderList(animateLast = false) {
     const box = document.getElementById('list');
-    // NOTE : On ne trie PLUS par date (.sort) pour respecter l'ordre manuel
     const safeTasks = Array.isArray(tasks) ? tasks : [];
     const activeTasks = safeTasks.filter(t => !t.done); 
     
@@ -462,7 +475,7 @@
     if (activeTasks.length === 0) { box.innerHTML = `<div class="empty-msg">Aucune mission en cours.<br>Profites-en pour explorer ! 🚀</div>`; return; }
     activeTasks.forEach(t => box.appendChild(createTaskElement(t, false)));
     
-    // Initialise le drag & drop APRES avoir rendu la liste
+    // IMPORTANT: Appeler initSortable APRES avoir rempli la liste
     initSortable();
   }
 
@@ -487,9 +500,7 @@
 
   function createTaskElement(t, isNew) {
     const el = document.createElement('div'); el.className = isNew ? 'task-item new-entry' : 'task-item'; el.id = 'task-' + t.id;
-    // data-id pour sortableJS (si besoin)
-    el.setAttribute('data-id', t.id);
-    
+    el.setAttribute('data-id', t.id); // Important pour sortable
     let badgeColor = t.lvl===1 ? 'var(--c-green)' : (t.lvl===2 ? 'var(--c-yellow)' : 'var(--c-red)');
     let badgeTxt = t.lvl===1 ? 'Easy' : (t.lvl===2 ? 'Medium' : 'Hard');
     const aura = getAuraHTML(t.lvl);
