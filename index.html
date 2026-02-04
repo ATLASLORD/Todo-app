@@ -166,7 +166,17 @@
 
     .aura-container { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: -1; }
     .aura-base { opacity: 0; animation: fadeInBase 1s ease-out 0.3s forwards; }
-    @media (hover: hover) { .aura-turbo { opacity: 0; transition: opacity 0.6s ease-out; } .task-item:hover .aura-turbo { opacity: 1; } }
+    /* Désactive l'animation de particules au hover */
+    @media (hover: hover) {
+      .aura-turbo { opacity: 0 !important; transition: opacity 0.6s ease-out; }
+      .task-item:hover .aura-turbo { opacity: 0 !important; }
+    }
+        /* Effet surbrillance flat design sur .task-item au hover */
+        .task-item:hover {
+          box-shadow: 0 0 0 4px var(--c-blue), 5px 5px 0 rgba(0,0,0,0.2);
+          border-color: var(--c-blue);
+          z-index: 2;
+        }
     @media (hover: none) { .aura-turbo { display: none; } }
     @keyframes fadeInBase { to { opacity: 1; } }
     .aura-dot { position: absolute; background-color: var(--c-dot); opacity: 0; border: 1px solid rgba(0,0,0,0.1); animation: driftOut linear infinite; }
