@@ -34,7 +34,7 @@
       --card: #ffffff; --outline: #2d3436; --outline-width: 3px;
       --text: #2d3436; --shadow-col: #2d3436;
       --input-bg: #ffffff; --input-focus: #f0fbff; --empty-bg: rgba(255,255,255,0.5);
-      --c-blue: #00cec9; --c-yellow: #fdcb6e; --c-red: #ff7675; --c-green: #00b894;
+      --c-blue: #00cec9; --c-yellow: #C0C0C0; --c-red: #FFD700; --c-green: #CD7F32;
       --c-dark: #2d3436; --c-grey: #b2bec3;
       --shadow: 6px 6px 0px var(--shadow-col);
     }
@@ -566,6 +566,7 @@
   }
 
   function getAuraHTML(level) {
+    // Bronze (lvl 1), Argent (lvl 2), Or (lvl 3)
     const color = level === 1 ? 'var(--c-green)' : (level === 2 ? 'var(--c-yellow)' : 'var(--c-red)');
     let htmlBase = '', htmlTurbo = '';
     const baseCount = isMobile ? 8 : 15; const turboCount = isMobile ? 15 : 30;
@@ -587,6 +588,7 @@
   function createTaskElement(t, isNew) {
     const el = document.createElement('div'); el.className = isNew ? 'task-item new-entry' : 'task-item'; el.id = 'task-' + t.id;
     el.setAttribute('data-id', t.id); 
+    // Bronze (lvl 1), Argent (lvl 2), Or (lvl 3)
     let badgeColor = t.lvl===1 ? 'var(--c-green)' : (t.lvl===2 ? 'var(--c-yellow)' : 'var(--c-red)');
     const aura = getAuraHTML(t.lvl);
     
@@ -707,6 +709,7 @@
       const row = document.createElement('div');
       row.className = `h-item ${t.lvl === 3 ? 'hard' : ''}`;
       row.style.animationDelay = (i * 0.05) + 's';
+      // Bronze (lvl 1), Argent (lvl 2), Or (lvl 3)
       let color = t.lvl===1 ? 'var(--c-green)' : (t.lvl===2 ? 'var(--c-yellow)' : 'var(--c-red)');
       let dur = t.created ? formatDuration(t.done - t.created) : '?';
       row.innerHTML = `
@@ -745,6 +748,7 @@
         const row = document.createElement('div');
         row.className = `h-item ${t.lvl === 3 ? 'hard' : ''}`;
         row.style.animationDelay = (i * 0.05) + 's';
+        // Bronze (lvl 1), Argent (lvl 2), Or (lvl 3)
         let color = t.lvl===1 ? 'var(--c-green)' : (t.lvl===2 ? 'var(--c-yellow)' : 'var(--c-red)');
         let dur = t.created ? formatDuration(t.done - t.created) : '?';
         row.innerHTML = `
