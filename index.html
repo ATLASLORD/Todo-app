@@ -173,9 +173,11 @@
     }
         /* Effet surbrillance flat design sur .task-item au hover */
         .task-item:hover {
-          box-shadow: 0 0 0 4px var(--c-blue), 5px 5px 0 rgba(0,0,0,0.2);
+          outline: 3px solid var(--c-blue);
+          outline-offset: -3px;
           border-color: var(--c-blue);
           z-index: 2;
+          box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
         }
     @media (hover: none) { .aura-turbo { display: none; } }
     @keyframes fadeInBase { to { opacity: 1; } }
