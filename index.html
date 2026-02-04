@@ -342,7 +342,11 @@
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const source = audioCtx.createBufferSource();
     source.buffer = buffers[name];
-    source.connect(audioCtx.destination);
+    // Crée un gainNode pour réduire le volume de moitié
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = 0.5;
+    source.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
     source.start(0);
   }
 
