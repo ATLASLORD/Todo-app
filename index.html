@@ -172,13 +172,13 @@
       .task-item:hover .aura-turbo { opacity: 0 !important; }
     }
         /* Effet surbrillance flat design sur .task-item au hover */
-        .task-item:hover,
+        /* Surbrillance uniquement sur la case déplacée, à l'intérieur */
         .task-item.sortable-chosen {
           outline: 3px solid var(--c-blue);
-          outline-offset: -3px;
+          outline-offset: 0;
           border-color: var(--c-blue);
           z-index: 2;
-          box-shadow: 5px 5px 0 rgba(0,0,0,0.2);
+          box-shadow: 8px 8px 0 rgba(0,0,0,0.3) !important;
         }
     @media (hover: none) { .aura-turbo { display: none; } }
     @keyframes fadeInBase { to { opacity: 1; } }
